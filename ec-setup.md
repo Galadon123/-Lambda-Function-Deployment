@@ -148,3 +148,17 @@ services:
 4. **Grafana**:
     - Grafana queries Tempo to retrieve the stored trace data.
     - The traces are visualized in Grafana’s user interface, allowing you to analyze them.
+
+api test:
+
+```json
+{
+  "httpMethod": "GET",
+  "path": "/",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": null,
+  "isBase64Encoded": false
+}
+```
