@@ -74,7 +74,7 @@ lambda_role = aws.iam.Role("lambda-role",
                                ]
                            }""")
 
-# Attach Policy to Role
+# Attach Policies to Role
 s3_policy = aws.iam.Policy("s3Policy",
                            policy="""{
                                "Version": "2012-10-17",
@@ -90,6 +90,11 @@ s3_policy = aws.iam.Policy("s3Policy",
 lambda_role_policy_attachment = aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachment",
                                                              role=lambda_role.name,
                                                              policy_arn=s3_policy.arn)
+
+# Attach additional policies for EC2 network interface creation and management
+lambda_role_policy_attachment_ec2 = aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachmentEC2",
+                                                                 role=lambda_role.name,
+                                                                 policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole")
 
 # Create EC2 Instance for Grafana Tempo
 ec2_instance = aws.ec2.Instance("grafana-tempo",
