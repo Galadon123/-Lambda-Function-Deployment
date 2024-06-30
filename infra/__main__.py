@@ -25,7 +25,7 @@ route_table = aws.ec2.RouteTable("my-vpc-public-rt",
                                  opts=pulumi.ResourceOptions(depends_on=[igw]),
                                  tags={"Name": "my-vpc-public-rt"})
 
-# Create Public Subnet within Vpc
+# Create Public Subnet within VPC
 public_subnet = aws.ec2.Subnet("public-subnet",
                                vpc_id=vpc.id,
                                cidr_block="10.0.1.0/24",
@@ -106,6 +106,8 @@ pulumi.export("igw_id", igw.id)
 pulumi.export("public_subnet_id", public_subnet.id)
 pulumi.export("route_table_id", route_table.id)
 pulumi.export("ec2_instance_id", ec2_instance.id)
-pulumi.export("ecr_registry", ecr_repo.registry_id)
-pulumi.export("lambda_role_arn", lambda_role.arn)
 pulumi.export("ec2_instance_public_ip", ec2_instance.public_ip)
+pulumi.export("ecr_registry", ecr_repo.registry_id)
+pulumi.export("ecr_repo_url", ecr_repo.repository_url)
+pulumi.export("lambda_role_arn", lambda_role.arn)
+pulumi.export("lambda_security_group_id", security_group.id)
