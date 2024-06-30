@@ -93,7 +93,7 @@ lambda_role_policy_attachment = aws.iam.RolePolicyAttachment("lambdaRolePolicyAt
 # Create EC2 Instance for Grafana Tempo
 ec2_instance = aws.ec2.Instance("grafana-tempo",
                                 instance_type="t2.micro",
-                                ami="ami-0c55b159cbfafe1f0",  # Amazon Linux 2 AMI (HVM), SSD Volume Type
+                                ami="ami-04b70fa74e45c3917",  # Amazon Linux 2 AMI (HVM), SSD Volume Type
                                 subnet_id=public_subnet.id,
                                 vpc_security_group_ids=[security_group.id],
                                 tags={"Name": "grafana-tempo"})
