@@ -1,6 +1,7 @@
 const { NodeSDK } = require('@opentelemetry/sdk-node');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-otlp-grpc');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+const { trace, context } = require('@opentelemetry/api');
 const grpc = require('@grpc/grpc-js');
 const AWS = require('aws-sdk');
 const express = require('express');
@@ -52,12 +53,20 @@ async function initializeOpenTelemetry() {
 initializeOpenTelemetry(); // Start the initialization on cold start
 
 app.get('/', (req, res) => {
-  res.send('Hello, World!');
+  const currentSpan = trace.getTracer('default').startSpan('GET /');
+  context.with(trace.setSpan(context.active(), currentSpan), () => {
+    res.send('Hello, World!');
+    currentSpan.end();
+  });
 });
 
 app.get('/trace', (req, res) => {
-  res.send('This route is traced with OpenTelemetry!');
-  console.log('Trace route accessed');
+  const currentSpan = trace.getTracer('default').startSpan('GET /trace');
+  context.with(trace.setSpan(context.active(), currentSpan), () => {
+    res.send('This route is traced with OpenTelemetry!');
+    console.log('Trace route accessed');
+    currentSpan.end();
+  });
 });
 
 exports.handler = (event, context) => {
