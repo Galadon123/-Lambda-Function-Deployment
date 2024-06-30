@@ -55,6 +55,8 @@ initializeOpenTelemetry(); // Start the initialization on cold start
 app.get('/', (req, res) => {
   const currentSpan = trace.getTracer('default').startSpan('GET /');
   context.with(trace.setSpan(context.active(), currentSpan), () => {
+    const traceId = currentSpan.spanContext().traceId;
+    console.log(`Trace ID for GET /: ${traceId}`);
     res.send('Hello, World!');
     currentSpan.end();
   });
@@ -63,6 +65,8 @@ app.get('/', (req, res) => {
 app.get('/trace', (req, res) => {
   const currentSpan = trace.getTracer('default').startSpan('GET /trace');
   context.with(trace.setSpan(context.active(), currentSpan), () => {
+    const traceId = currentSpan.spanContext().traceId;
+    console.log(`Trace ID for GET /trace: ${traceId}`);
     res.send('This route is traced with OpenTelemetry!');
     console.log('Trace route accessed');
     currentSpan.end();
