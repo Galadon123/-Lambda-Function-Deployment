@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/trace', (req, res) => {
-  res.send('This route is traced with OpenTelemetry.');
+  res.send('This route is traced with OpenTelemetry!.');
   console.log('Trace route accessed');
 });
 
