@@ -16,7 +16,6 @@ app.use(express.json());
 app.use(awsServerlessExpressMiddleware.eventContext());
 
 let otelInitialized = false;
-let sdk;
 
 async function getEC2InstancePrivateIP(bucket, key) {
   const params = { Bucket: bucket, Key: key };
@@ -37,7 +36,7 @@ async function initializeOpenTelemetry() {
         credentials: grpc.credentials.createInsecure(),
       });
 
-      sdk = new NodeSDK({
+      const sdk = new NodeSDK({
         traceExporter,
         instrumentations: [getNodeAutoInstrumentations()],
       });
@@ -51,7 +50,8 @@ async function initializeOpenTelemetry() {
   }
 }
 
-initializeOpenTelemetry(); // Start the initialization on cold start
+// Initialize OpenTelemetry outside the handler to ensure it runs on cold start
+initializeOpenTelemetry();
 
 app.get('/', (req, res) => {
   const currentSpan = trace.getTracer('default').startSpan('GET /');
@@ -74,10 +74,7 @@ app.get('/trace', (req, res) => {
   });
 });
 
-exports.handler = async (event, context) => {
+exports.handler = (event, context) => {
   console.log("Handler invoked");
-  if (!otelInitialized) {
-    await initializeOpenTelemetry(); // Ensure OpenTelemetry is initialized
-  }
   return awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
 };
