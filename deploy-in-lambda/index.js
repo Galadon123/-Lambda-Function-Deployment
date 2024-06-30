@@ -4,7 +4,6 @@ const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumenta
 const grpc = require('@grpc/grpc-js');
 const AWS = require('aws-sdk');
 const express = require('express');
-const awsServerlessExpress = require('aws-serverless-express');
 
 const s3 = new AWS.S3();
 const app = express();
@@ -32,6 +31,8 @@ async function initializeOpenTelemetry() {
   });
 
   sdk.start();
+
+  console.log('OpenTelemetry SDK initialized');
 }
 
 initializeOpenTelemetry();
@@ -42,10 +43,15 @@ app.get('/', (req, res) => {
 
 app.get('/trace', (req, res) => {
   res.send('This route is traced with OpenTelemetry.');
+  console.log('Trace route accessed');
 });
 
-const server = awsServerlessExpress.createServer(app);
-
-exports.handler = (event, context) => {
-  awsServerlessExpress.proxy(server, event, context);
+exports.handler = async (event) => {
+  console.log("Event: ", event);
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify('Lambda function has been updated with tracing!'),
+  };
+  console.log('Trace generated for Lambda function');
+  return response;
 };
