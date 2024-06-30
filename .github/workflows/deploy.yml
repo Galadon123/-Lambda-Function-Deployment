@@ -64,7 +64,7 @@ jobs:
           ECR_REPO_URL: ${{ env.ECR_REPO_URL }}
           IMAGE_TAG: latest
         run: |
-          cd my-node-app
+          cd deploy-in-lambda
           docker build -t $ECR_REPO_URL:$IMAGE_TAG .
           docker push $ECR_REPO_URL:$IMAGE_TAG
 
