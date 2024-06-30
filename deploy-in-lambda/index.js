@@ -14,6 +14,8 @@ const server = awsServerlessExpress.createServer(app);
 app.use(express.json());
 app.use(awsServerlessExpressMiddleware.eventContext());
 
+let otelInitialized = false;
+
 async function getEC2InstancePrivateIP(bucket, key) {
   const params = { Bucket: bucket, Key: key };
   const data = await s3.getObject(params).promise();
@@ -22,41 +24,43 @@ async function getEC2InstancePrivateIP(bucket, key) {
 }
 
 async function initializeOpenTelemetry() {
-  const ec2InstancePrivateIP = await getEC2InstancePrivateIP('lambda-function-bucket-poridhi', 'pulumi-outputs.json');
+  if (!otelInitialized) {
+    console.log("Initializing OpenTelemetry...");
+    try {
+      const ec2InstancePrivateIP = await getEC2InstancePrivateIP('lambda-function-bucket-poridhi', 'pulumi-outputs.json');
+      console.log(`Fetched EC2 instance private IP: ${ec2InstancePrivateIP}`);
 
-  const traceExporter = new OTLPTraceExporter({
-    url: `http://${ec2InstancePrivateIP}:4317`,
-    credentials: grpc.credentials.createInsecure(),
-  });
+      const traceExporter = new OTLPTraceExporter({
+        url: `http://${ec2InstancePrivateIP}:4317`,
+        credentials: grpc.credentials.createInsecure(),
+      });
 
-  const sdk = new NodeSDK({
-    traceExporter,
-    instrumentations: [getNodeAutoInstrumentations()],
-  });
+      const sdk = new NodeSDK({
+        traceExporter,
+        instrumentations: [getNodeAutoInstrumentations()],
+      });
 
-  await sdk.start();
-
-  console.log('OpenTelemetry SDK initialized');
+      await sdk.start();
+      otelInitialized = true;
+      console.log('OpenTelemetry SDK initialized');
+    } catch (error) {
+      console.error("Error initializing OpenTelemetry:", error);
+    }
+  }
 }
 
-let otelInitialized = initializeOpenTelemetry();
+initializeOpenTelemetry(); // Start the initialization on cold start
 
 app.get('/', (req, res) => {
   res.send('Hello, World!');
 });
 
 app.get('/trace', (req, res) => {
-  const currentSpan = require('@opentelemetry/api').trace.getSpan(require('@opentelemetry/api').context.active());
-  if (currentSpan) {
-    console.log('Trace ID:', currentSpan.spanContext().traceId);
-    res.send(`This route is traced with OpenTelemetry! Trace ID: ${currentSpan.spanContext().traceId}`);
-  } else {
-    res.send('This route is traced with OpenTelemetry!');
-  }
+  res.send('This route is traced with OpenTelemetry!');
   console.log('Trace route accessed');
 });
 
-exports.handler = async (event, context) => {
-  await otelInitialized;
-  return awsServerlessExpress.proxy(server, event, context);
+exports.handler = (event, context) => {
+  console.log("Handler invoked");
+  return awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
 };
