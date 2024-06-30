@@ -74,7 +74,7 @@ lambda_role = aws.iam.Role("lambda-role",
                                ]
                            }""")
 
-# Attach Policy to Role
+# Attach Policy to Roles
 s3_policy = aws.iam.Policy("s3Policy",
                            policy="""{
                                "Version": "2012-10-17",
