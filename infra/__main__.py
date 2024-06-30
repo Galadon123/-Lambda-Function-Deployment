@@ -39,7 +39,7 @@ route_table_association = aws.ec2.RouteTableAssociation("public-subnet-associati
                                                         route_table_id=route_table.id,
                                                         opts=pulumi.ResourceOptions(depends_on=[route_table]))
 
-# Create Security Group
+# Create Security Groupfefgdfvsaedfgweafg
 security_group = aws.ec2.SecurityGroup("lambda-security-group",
                                        vpc_id=vpc.id,
                                        description="Allow HTTP inbound traffic",
