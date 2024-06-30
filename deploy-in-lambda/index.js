@@ -57,7 +57,7 @@ app.get('/', (req, res) => {
   context.with(trace.setSpan(context.active(), currentSpan), () => {
     const traceId = currentSpan.spanContext().traceId;
     console.log(`Trace ID for GET /: ${traceId}`);
-    res.send('Hello, World!');
+    res.send(`Hello, World! Trace ID: ${traceId}`);
     currentSpan.end();
   });
 });
@@ -67,7 +67,7 @@ app.get('/trace', (req, res) => {
   context.with(trace.setSpan(context.active(), currentSpan), () => {
     const traceId = currentSpan.spanContext().traceId;
     console.log(`Trace ID for GET /trace: ${traceId}`);
-    res.send('This route is traced with OpenTelemetry!');
+    res.send(`This route is traced with OpenTelemetry! Trace ID: ${traceId}`);
     console.log('Trace route accessed');
     currentSpan.end();
   });
