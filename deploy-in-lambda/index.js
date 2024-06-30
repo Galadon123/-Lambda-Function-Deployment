@@ -14,7 +14,7 @@ async function getEC2InstanceIP(bucket, key) {
   const params = { Bucket: bucket, Key: key };
   const data = await s3.getObject(params).promise();
   const outputs = JSON.parse(data.Body.toString('utf-8'));
-  return outputs.ec2_instance_ip;
+  return outputs.ec2_instance_public_ip;
 }
 
 async function initializeOpenTelemetry() {
@@ -33,6 +33,7 @@ async function initializeOpenTelemetry() {
   sdk.start();
 }
 
+// Initialize OpenTelemetry outside the handler to ensure it's only done once per container
 initializeOpenTelemetry();
 
 app.get('/', (req, res) => {
@@ -45,9 +46,11 @@ app.get('/trace', (req, res) => {
 
 exports.handler = async (event) => {
   console.log("Event: ", event);
+
   const response = {
     statusCode: 200,
     body: JSON.stringify('Lambda function has been updated with tracing!'),
   };
+
   return response;
 };
