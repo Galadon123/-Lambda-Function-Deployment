@@ -14,6 +14,8 @@ const server = awsServerlessExpress.createServer(app);
 app.use(express.json());
 app.use(awsServerlessExpressMiddleware.eventContext());
 
+let otelInitialized = false;
+
 async function getEC2InstancePrivateIP(bucket, key) {
   const params = { Bucket: bucket, Key: key };
   const data = await s3.getObject(params).promise();
@@ -22,29 +24,32 @@ async function getEC2InstancePrivateIP(bucket, key) {
 }
 
 async function initializeOpenTelemetry() {
-  console.log("Initializing OpenTelemetry...");
-  try {
-    const ec2InstancePrivateIP = await getEC2InstancePrivateIP('lambda-function-bucket-poridhi', 'pulumi-outputs.json');
-    console.log(`Fetched EC2 instance private IP: ${ec2InstancePrivateIP}`);
+  if (!otelInitialized) {
+    console.log("Initializing OpenTelemetry...");
+    try {
+      const ec2InstancePrivateIP = await getEC2InstancePrivateIP('lambda-function-bucket-poridhi', 'pulumi-outputs.json');
+      console.log(`Fetched EC2 instance private IP: ${ec2InstancePrivateIP}`);
 
-    const traceExporter = new OTLPTraceExporter({
-      url: `http://${ec2InstancePrivateIP}:4317`,
-      credentials: grpc.credentials.createInsecure(),
-    });
+      const traceExporter = new OTLPTraceExporter({
+        url: `http://${ec2InstancePrivateIP}:4317`,
+        credentials: grpc.credentials.createInsecure(),
+      });
 
-    const sdk = new NodeSDK({
-      traceExporter,
-      instrumentations: [getNodeAutoInstrumentations()],
-    });
+      const sdk = new NodeSDK({
+        traceExporter,
+        instrumentations: [getNodeAutoInstrumentations()],
+      });
 
-    await sdk.start();
-    console.log('OpenTelemetry SDK initialized');
-  } catch (error) {
-    console.error("Error initializing OpenTelemetry:", error);
+      await sdk.start();
+      otelInitialized = true;
+      console.log('OpenTelemetry SDK initialized');
+    } catch (error) {
+      console.error("Error initializing OpenTelemetry:", error);
+    }
   }
 }
 
-let otelInitializedPromise = initializeOpenTelemetry();
+initializeOpenTelemetry(); // Start the initialization on cold start
 
 app.get('/', (req, res) => {
   res.send('Hello, World!');
@@ -55,8 +60,7 @@ app.get('/trace', (req, res) => {
   console.log('Trace route accessed');
 });
 
-exports.handler = async (event, context) => {
+exports.handler = (event, context) => {
   console.log("Handler invoked");
-  await otelInitializedPromise;
-  return awsServerlessExpress.proxy(server, event, context);
+  return awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
 };
