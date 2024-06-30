@@ -14,18 +14,18 @@ const server = awsServerlessExpress.createServer(app);
 app.use(express.json());
 app.use(awsServerlessExpressMiddleware.eventContext());
 
-async function getEC2InstanceIP(bucket, key) {
+async function getEC2InstancePrivateIP(bucket, key) {
   const params = { Bucket: bucket, Key: key };
   const data = await s3.getObject(params).promise();
   const outputs = JSON.parse(data.Body.toString('utf-8'));
-  return outputs.ec2_instance_ip;
+  return outputs.ec2_instance_private_ip; // Use the private IP
 }
 
 async function initializeOpenTelemetry() {
-  const ec2InstanceIP = await getEC2InstanceIP('lambda-function-bucket-poridhi', 'pulumi-outputs.json');
+  const ec2InstancePrivateIP = await getEC2InstancePrivateIP('lambda-function-bucket-poridhi', 'pulumi-outputs.json');
 
   const traceExporter = new OTLPTraceExporter({
-    url: `http://${ec2InstanceIP}:4317`,
+    url: `http://${ec2InstancePrivateIP}:4317`,
     credentials: grpc.credentials.createInsecure(),
   });
 
@@ -34,12 +34,12 @@ async function initializeOpenTelemetry() {
     instrumentations: [getNodeAutoInstrumentations()],
   });
 
-  sdk.start();
+  await sdk.start();
 
   console.log('OpenTelemetry SDK initialized');
 }
 
-initializeOpenTelemetry();
+let otelInitialized = initializeOpenTelemetry();
 
 app.get('/', (req, res) => {
   res.send('Hello, World!');
@@ -50,6 +50,7 @@ app.get('/trace', (req, res) => {
   console.log('Trace route accessed');
 });
 
-exports.handler = (event, context) => {
+exports.handler = async (event, context) => {
+  await otelInitialized;
   return awsServerlessExpress.proxy(server, event, context);
 };
