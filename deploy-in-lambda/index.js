@@ -16,6 +16,7 @@ app.use(express.json());
 app.use(awsServerlessExpressMiddleware.eventContext());
 
 let otelInitialized = false;
+let sdk;
 
 async function getEC2InstancePrivateIP(bucket, key) {
   const params = { Bucket: bucket, Key: key };
@@ -36,7 +37,7 @@ async function initializeOpenTelemetry() {
         credentials: grpc.credentials.createInsecure(),
       });
 
-      const sdk = new NodeSDK({
+      sdk = new NodeSDK({
         traceExporter,
         instrumentations: [getNodeAutoInstrumentations()],
       });
@@ -50,10 +51,9 @@ async function initializeOpenTelemetry() {
   }
 }
 
-// Initialize OpenTelemetry outside the handler to ensure it runs on cold start
-initializeOpenTelemetry();
+initializeOpenTelemetry(); // Start the initialization on cold start
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
   const currentSpan = trace.getTracer('default').startSpan('GET /');
   context.with(trace.setSpan(context.active(), currentSpan), () => {
     const traceId = currentSpan.spanContext().traceId;
@@ -63,7 +63,7 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/trace', (req, res) => {
+app.get('/trace', async (req, res) => {
   const currentSpan = trace.getTracer('default').startSpan('GET /trace');
   context.with(trace.setSpan(context.active(), currentSpan), () => {
     const traceId = currentSpan.spanContext().traceId;
@@ -74,7 +74,8 @@ app.get('/trace', (req, res) => {
   });
 });
 
-exports.handler = (event, context) => {
+exports.handler = async (event, context) => {
   console.log("Handler invoked");
+  await initializeOpenTelemetry(); // Ensure OpenTelemetry is initialized
   return awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
 };
