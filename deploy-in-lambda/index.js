@@ -75,6 +75,6 @@ app.get('/trace', async (req, res) => {
 
 exports.handler = async (event, context) => {
   console.log("Handler invoked");
-  await initializeOpenTelemetry(); // Ensure OpenTelemetry is initialized
+  await initializeOpenTelemetry(); // Ensure OpenTelemetry is initialized fasfa
   return awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
 };
