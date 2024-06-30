@@ -53,7 +53,7 @@ async function initializeOpenTelemetry() {
 
 initializeOpenTelemetry(); // Start the initialization on cold start
 
-app.get('/', async (req, res) => {
+app.get('/', (req, res) => {
   const currentSpan = trace.getTracer('default').startSpan('GET /');
   context.with(trace.setSpan(context.active(), currentSpan), () => {
     const traceId = currentSpan.spanContext().traceId;
@@ -63,7 +63,7 @@ app.get('/', async (req, res) => {
   });
 });
 
-app.get('/trace', async (req, res) => {
+app.get('/trace', (req, res) => {
   const currentSpan = trace.getTracer('default').startSpan('GET /trace');
   context.with(trace.setSpan(context.active(), currentSpan), () => {
     const traceId = currentSpan.spanContext().traceId;
@@ -76,6 +76,8 @@ app.get('/trace', async (req, res) => {
 
 exports.handler = async (event, context) => {
   console.log("Handler invoked");
-  await initializeOpenTelemetry(); // Ensure OpenTelemetry is initialized
+  if (!otelInitialized) {
+    await initializeOpenTelemetry(); // Ensure OpenTelemetry is initialized
+  }
   return awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
 };
