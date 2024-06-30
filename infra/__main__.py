@@ -6,9 +6,13 @@ vpc = aws.ec2.Vpc("my-vpc",
                   cidr_block="10.0.0.0/16",
                   tags={"Name": "my-vpc"})
 
+# Ensure VPC is created before creating other resources
+vpc_created = vpc.id.apply(lambda _: True)
+
 # Create Internet Gateway
 igw = aws.ec2.InternetGateway("my-vpc-igw",
                               vpc_id=vpc.id,
+                              opts=pulumi.ResourceOptions(depends_on=[vpc]),
                               tags={"Name": "my-vpc-igw"})
 
 # Create Route Table
@@ -18,6 +22,7 @@ route_table = aws.ec2.RouteTable("my-vpc-public-rt",
                                      "cidr_block": "0.0.0.0/0",
                                      "gateway_id": igw.id,
                                  }],
+                                 opts=pulumi.ResourceOptions(depends_on=[igw]),
                                  tags={"Name": "my-vpc-public-rt"})
 
 # Create Public Subnet
@@ -25,12 +30,14 @@ public_subnet = aws.ec2.Subnet("public-subnet",
                                vpc_id=vpc.id,
                                cidr_block="10.0.1.0/24",
                                availability_zone="us-east-1a",
+                               opts=pulumi.ResourceOptions(depends_on=[vpc]),
                                tags={"Name": "public-subnet"})
 
 # Associate Route Table with Subnet
 route_table_association = aws.ec2.RouteTableAssociation("public-subnet-association",
                                                         subnet_id=public_subnet.id,
-                                                        route_table_id=route_table.id)
+                                                        route_table_id=route_table.id,
+                                                        opts=pulumi.ResourceOptions(depends_on=[route_table]))
 
 # Create Security Group
 security_group = aws.ec2.SecurityGroup("lambda-security-group",
@@ -42,6 +49,7 @@ security_group = aws.ec2.SecurityGroup("lambda-security-group",
                                            "to_port": 80,
                                            "cidr_blocks": ["0.0.0.0/0"],
                                        }],
+                                       opts=pulumi.ResourceOptions(depends_on=[vpc]),
                                        tags={"Name": "lambda-security-group"})
 
 # Create ECR Repository
