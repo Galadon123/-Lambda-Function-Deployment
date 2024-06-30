@@ -48,24 +48,24 @@ auth_enabled: false
 server:
   http_listen_port: 3200
 
-search:
-  backend: local
-  local:
-    path: /tmp/tempo/traces
-
 ingester:
   trace_idle_period: 30s
-  max_block_bytes: 5MB
+  max_block_bytes: 5000000
   max_block_duration: 5m
-
-querier:
-  query_timeout: 10s
 
 storage:
   trace:
     backend: local
     local:
       path: /tmp/tempo/traces
+
+compactor:
+  compaction:
+    block_retention: 48h
+
+querier:
+  frontend_worker:
+    frontend_address: 127.0.0.1:9095
 ```
 
 #### `otel-collector-config.yaml`
