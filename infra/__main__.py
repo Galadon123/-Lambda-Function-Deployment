@@ -25,12 +25,12 @@ route_table = aws.ec2.RouteTable("my-vpc-public-rt",
                                  opts=pulumi.ResourceOptions(depends_on=[igw]),
                                  tags={"Name": "my-vpc-public-rt"})
 
-# Create Public Subnet within vpc
+# Create Public Subnet within Vpc
 public_subnet = aws.ec2.Subnet("public-subnet",
                                vpc_id=vpc.id,
                                cidr_block="10.0.1.0/24",
                                availability_zone="us-east-1a",
-                               map_public_ip_on_launch=True,
+                               map_public_ip_on_launch=True,  # Enable automatic public IP assignment
                                opts=pulumi.ResourceOptions(depends_on=[vpc]),
                                tags={"Name": "public-subnet"})
 
@@ -40,7 +40,7 @@ route_table_association = aws.ec2.RouteTableAssociation("public-subnet-associati
                                                         route_table_id=route_table.id,
                                                         opts=pulumi.ResourceOptions(depends_on=[route_table]))
 
-# Create Security Groupfefgdfvsaedfgweafg
+# Create Security Group
 security_group = aws.ec2.SecurityGroup("lambda-security-group",
                                        vpc_id=vpc.id,
                                        description="Allow HTTP inbound traffic",
@@ -74,7 +74,7 @@ lambda_role = aws.iam.Role("lambda-role",
                                ]
                            }""")
 
-# Attach Policy to Roles
+# Attach Policy to Role
 s3_policy = aws.iam.Policy("s3Policy",
                            policy="""{
                                "Version": "2012-10-17",
@@ -97,6 +97,7 @@ ec2_instance = aws.ec2.Instance("grafana-tempo",
                                 ami="ami-04b70fa74e45c3917",  # Amazon Linux 2 AMI (HVM), SSD Volume Type
                                 subnet_id=public_subnet.id,
                                 vpc_security_group_ids=[security_group.id],
+                                associate_public_ip_address=True,  # Ensure public IP is associated
                                 tags={"Name": "grafana-tempo"})
 
 # Export outputs
