@@ -4,11 +4,15 @@ const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumenta
 const grpc = require('@grpc/grpc-js');
 const AWS = require('aws-sdk');
 const express = require('express');
+const awsServerlessExpress = require('aws-serverless-express');
+const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
 
 const s3 = new AWS.S3();
 const app = express();
+const server = awsServerlessExpress.createServer(app);
 
 app.use(express.json());
+app.use(awsServerlessExpressMiddleware.eventContext());
 
 async function getEC2InstanceIP(bucket, key) {
   const params = { Bucket: bucket, Key: key };
@@ -46,12 +50,6 @@ app.get('/trace', (req, res) => {
   console.log('Trace route accessed');
 });
 
-exports.handler = async (event) => {
-  console.log("Event: ", event);
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify('Lambda function has been updated with tracing!'),
-  };
-  console.log('Trace generated for Lambda function');
-  return response;
+exports.handler = (event, context) => {
+  return awsServerlessExpress.proxy(server, event, context);
 };
