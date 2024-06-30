@@ -1,0 +1,34 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+    logging:
+      level: debug
+
+exporters:
+  logging:
+    logLevel: debug
+  tempo:
+    endpoint: "http://3.84.195.75:3100"
+    logging:
+      level: debug
+
+processors:
+  batch:
+  memory_limiter:
+  tail_sampling:
+    policies:
+      always_sample: {}
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, memory_limiter, tail_sampling]
+      exporters: [logging, tempo]
+  telemetry:
+    logs:
+      level: debug
