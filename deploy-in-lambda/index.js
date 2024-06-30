@@ -18,7 +18,7 @@ async function getEC2InstancePrivateIP(bucket, key) {
   const params = { Bucket: bucket, Key: key };
   const data = await s3.getObject(params).promise();
   const outputs = JSON.parse(data.Body.toString('utf-8'));
-  return outputs.ec2_instance_private_ip; // Use the private IP
+  return outputs.ec2_instance_private_ip; // Use the private IP of the EC2 instance
 }
 
 async function initializeOpenTelemetry() {
