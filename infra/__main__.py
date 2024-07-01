@@ -136,7 +136,7 @@ ec2_instance = aws.ec2.Instance("grafana-tempo-otel",
                                 associate_public_ip_address=True,  # Ensure public IP is associated
                                 tags={"Name": "grafana-tempo-otel"})
 
-# Export outputs
+# Export outputs nhg
 pulumi.export("vpc_id", vpc.id)
 pulumi.export("igw_id", igw.id)
 pulumi.export("public_subnet_id", public_subnet.id)
