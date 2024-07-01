@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  tempo:
+    image: grafana/tempo:latest
+    ports:
+      - "3200:3200"
+    command: ["tempo", "serve", "--config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"  # Expose the OTLP gRPC endpoint
+      - "4318:4318"  # Expose the OTLP HTTP endpoint
