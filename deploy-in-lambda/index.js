@@ -3,6 +3,7 @@ const { OTLPTraceExporter } = require('@opentelemetry/exporter-otlp-grpc');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { trace, context } = require('@opentelemetry/api');
 const grpc = require('@grpc/grpc-js');
+const AWS = require('aws-sdk');
 const express = require('express');
 const awsServerlessExpress = require('aws-serverless-express');
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
@@ -20,7 +21,7 @@ async function initializeOpenTelemetry() {
     console.log("Initializing OpenTelemetry...");
     try {
       const traceExporter = new OTLPTraceExporter({
-        url: 'http://localhost:4317',  // Replace with your collector's URL
+        url: 'http://10.0.1.183:4317',  // Replace with your collector's URL
         credentials: grpc.credentials.createInsecure(),
       });
 
