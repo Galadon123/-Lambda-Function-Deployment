@@ -63,6 +63,29 @@ app.get('/trace', (req, res) => {
   });
 });
 
+app.get('/slow', (req, res) => {
+  const currentSpan = trace.getTracer('default').startSpan('GET /slow');
+  context.with(trace.setSpan(context.active(), currentSpan), () => {
+    setTimeout(() => {
+      const traceId = currentSpan.spanContext().traceId;
+      console.log(`Trace ID for GET /slow: ${traceId}`);
+      res.send(`This is a slow route. Trace ID: ${traceId}`);
+      currentSpan.end();
+    }, 3000);
+  });
+});
+
+app.get('/error', (req, res) => {
+  const currentSpan = trace.getTracer('default').startSpan('GET /error');
+  context.with(trace.setSpan(context.active(), currentSpan), () => {
+    const traceId = currentSpan.spanContext().traceId;
+    console.log(`Trace ID for GET /error: ${traceId}`);
+    res.status(500).send(`This route returns an error. Trace ID: ${traceId}`);
+    currentSpan.setStatus({ code: trace.SpanStatusCode.ERROR });
+    currentSpan.end();
+  });
+});
+
 exports.handler = (event, context) => {
   console.log("Handler invoked");
   return awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
