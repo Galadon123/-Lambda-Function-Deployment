@@ -41,6 +41,9 @@ jobs:
       - name: Pulumi stack select
         run: pulumi stack select dev-p --cwd infra
 
+      - name: Pulumi refresh
+        run: pulumi refresh --yes --cwd infra
+
       - name: Pulumi up
         run: pulumi up --yes --cwd infra
 
