@@ -1,9 +1,11 @@
 # Automating Lambda Function Deployment with Pulumi, GitHub Actions, and Grafana Tempo for Tracing
 
-This project demonstrates the automation of deploying a Lambda function using Pulumi and GitHub Actions, along with setting up an observability stack comprising Grafana, Tempo, and the OpenTelemetry Collector on an EC2 instance. By leveraging infrastructure as code with Pulumi and continuous deployment pipelines with GitHub Actions, we ensure a seamless and repeatable process for provisioning AWS resources and deploying serverless applications. The integration of Grafana and Tempo allows for comprehensive tracing and monitoring, providing insights into the application's performance and behavior. This setup is designed to enhance the efficiency and reliability of cloud infrastructure management and application deployment.
+This project demonstrates the automation of deploying a Lambda function using Pulumi and GitHub Actions, along with setting up an observability stack comprising Grafana, Tempo, and the OpenTelemetry Collector on an EC2 instance. By leveraging infrastructure as code with Pulumi and continuous deployment pipelines with GitHub Actions, we ensure a seamless and repeatable process for provisioning AWS resources and deploying serverless applications. 
+![](./image/diagram-export-7-2-2024-5_32_58-PM.png)
 
-![](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/Screenshot%202024-07-01%20210422.png)
+The integration of Grafana and Tempo allows for comprehensive tracing and monitoring from lambda function, providing insights into the application's performance and behavior. This setup is designed to enhance the efficiency and reliability of cloud infrastructure management and application deployment.
 
+![](./image/diagram-export-7-2-2024-5_32_30-PM.png)
 ## Project Directory
 
 ```
