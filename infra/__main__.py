@@ -66,6 +66,13 @@ ec2_security_group = aws.ec2.SecurityGroup("ec2-security-group",
                                            opts=pulumi.ResourceOptions(depends_on=[vpc]),
                                            tags={"Name": "ec2-security-group"})
 
+ec2_instance = aws.ec2.Instance("my-ec2-instance",
+                                instance_type="t2.micro",
+                                vpc_security_group_ids=[ec2_security_group.id],
+                                subnet_id=public_subnet.id,
+                                ami="ami-04a81a99f5ec58529",  # Example AMI ID, replace with your desired AMI
+                                tags={"Name": "my-ec2-instance"},
+                                opts=pulumi.ResourceOptions(depends_on=[public_subnet, ec2_security_group]))
 # Create Private Subnet within VPC
 private_subnet = aws.ec2.Subnet("private-subnet",
                                 vpc_id=vpc.id,
@@ -170,4 +177,6 @@ pulumi.export("ec2_security_group_id", ec2_security_group.id)
 pulumi.export("lambda_security_group_id", lambda_security_group.id)
 pulumi.export("lambda_role_arn", lambda_role.arn)
 pulumi.export("bucket_name", bucket.bucket)
-pulumi.export("repository_url", repository.repository_url)
+pulumi.export("ecr_repo_url", repository.repository_url)
+pulumi.export("ecr_registry", repository.registry_id)
+pulumi.export("ec2_private_ip", ec2_instance.private_ip)
