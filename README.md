@@ -15,6 +15,7 @@ project-root/
 │   ├── subnet.py
 │   ├── ecr_repository.py
 │   ├── lambda_role.py
+│   ├── s3_bucket.py
 │   └── security_group.py
 ├── deploy-in-lambda/
 │   ├── index.js
@@ -97,6 +98,7 @@ from SecurityGroups import SecurityGroups
 from EC2 import EC2Instance
 from ECR import ECRRepository
 from IAM import IAMRole
+from S3Bucket import S3Bucket
 
 # Initialize resources
 vpc = VPC("my-vpc")
@@ -104,6 +106,7 @@ sg = SecurityGroups("my-vpc", vpc.vpc.id)
 ec2 = EC2Instance("grafana-tempo-otel", vpc.public_subnet.id, [sg.grafana_security_group.id])
 ecr = ECRRepository("my-lambda-function")
 iam = IAMRole("lambda")
+s3_bucket = S3Bucket("lambda-function-bucket-poridhi")
 
 # Export outputs
 pulumi.export("vpc_id", vpc.vpc.id)
@@ -257,7 +260,9 @@ class IAMRole:
                                             ]
                                         }""")
 
-        self.role_policy_attachment = aws.iam.RolePolicyAttachment(f"{name}-rolePolicyAttachment",
+        self.role_policy_attachment =
+
+ aws.iam.RolePolicyAttachment(f"{name}-rolePolicyAttachment",
                                                                    role=self.role.name,
                                                                    policy_arn=self.s3_policy.arn)
 
@@ -266,6 +271,22 @@ class IAMRole:
                                                                   policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole")
 
         pulumi.export("lambda_role_arn", self.role.arn)
+```
+
+#### `infra/S3Bucket.py`
+
+```python
+import pulumi
+import pulumi_aws as aws
+
+class S3Bucket:
+    def __init__(self, name):
+        self.bucket = aws.s3.Bucket(name,
+                                    bucket=name,
+                                    acl="public-read",
+                                    tags={"Name": name})
+
+        pulumi.export("bucket_name", self.bucket.bucket)
 ```
 
 #### `infra/EC2.py`
@@ -394,7 +415,7 @@ exports.handler = (event, context) => {
 ```
 
 3. **Create `package.json`**:
-    ```json
+```json
     {
   "name": "lambda-function",
   "version": "1.0.0",
@@ -416,7 +437,7 @@ exports.handler = (event, context) => {
   "author": "",
   "license": "ISC"
   }
-    ```
+```
 
 4. **Install Dependencies**:
     ```sh
@@ -461,105 +482,6 @@ CMD [ "index.handler" ]
         - `PULUMI_ACCESS_TOKEN`: Your Pulumi access token.
 
     ![](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-3.png)
-
-## Create S3 Bucket and Set Up Policies
-
-1. **Create S3 Bucket**:
-    - Go to the AWS Management Console.
-    - Navigate to S3 and create a new bucket. Name it `lambda-function-bucket-poridhi`.
-    - Follow the visual representation 
-
-    ### Detailed Steps for Creating an IAM Role to Allow Public Access to S3 Bucket Objects
-
-#### Step 1: Create an S3 Bucket
-
-1. **Navigate to S3 Service**
-   - Go to the AWS Management Console.
-   - Navigate to the S3 service.
-
-2. **Create a New Bucket**
-   - Click on the "Create bucket" button.
-   
-   ![Create Bucket](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-4.png)
-
-3. **Configure the Bucket**
-   - Enter the bucket name (e.g., `lambda-function-bucket-poridhi`).
-   - Select the appropriate region (e.g., `US East (N. Virginia) us-east-1`).
-   - Choose "General purpose" as the bucket type.
-   
-   ![Configure Bucket](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-5.png)
-
-4. **Set Object Ownership and Public Access**
-   - Set Object Ownership to "Bucket owner enforced".
-   - Uncheck "Block all public access" to allow public access.
-   
-   ![Public Access](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-6.png)
-
-5. **Enable Bucket Versioning**
-   - Enable bucket versioning for better data management.
-   
-   ![Bucket Versioning](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-7.png)
-
-6. **Create the Bucket**
-   - Click on "Create bucket" to finalize the creation.
-   
-Sure, here are the detailed steps for creating an IAM role that allows public access to objects in the `lambda-function-bucket-poridhi` bucket:
-
-## Create an IAM Role for Public Access to S3 Bucket Objects
-
-1. **Navigate to the IAM Roles Section**
-   - Go to the AWS Management Console.
-   - Navigate to the IAM service.
-   - Select "Roles" from the left-hand menu.
-   - Click on the "Create role" button.
-
-   ![Create Role](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-9.png)
-
-2. **Select Trusted Entity Type**
-   - Choose "AWS service" as the trusted entity type.
-   - In the "Use case" dropdown, select "Lambda".
-   - Click "Next: Permissions".
-
-   ![Select Trusted Entity](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-10.png)
-
-3. **Attach Inline Policy**
-   - In the "Permissions" section, click on the "Create inline policy" button.
-
-   ![Create Inline Policy](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-11.png)
-
-4. **Specify Permissions using JSON**
-   - Switch to the "JSON" tab.
-   - Add the following JSON policy to allow public read access to objects in the specified S3 bucket:
-     ```json
-     {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::lambda-function-bucket-poridhi/pulumi-outputs.json"
-        }
-     ]
-    }
-     ```
-   - Click "Review policy".
-
-   ![Specify Permissions](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-12.png)
-
-5. **Review and Create Policy**
-   - Give the policy a name (e.g., `PublicAccessToLambdaBucket`).
-   - Review the policy details.
-   - Click "Create policy".
-
-6. **Attach the Policy to the Role**
-   - Ensure that the newly created inline policy is attached to the role.
-   - Proceed with the role creation by clicking "Next: Tags".
-
-
-8. **Review and Create Role**
-   - Review the role details.
-   - Give the role a name (e.g., `LambdaS3PublicAccessRole`).
-   - Click "Create role".
 
 ## Create Two Workflows
 
@@ -730,6 +652,8 @@ jobs:
               --function-name $FUNCTION_NAME \
               --image-uri $IMAGE_URI \
               --region $AWS_REGION
+
+
           fi
 ```
 
@@ -758,7 +682,11 @@ jobs:
 ![](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-w-1.png)
 ![](https://github.com/Galadon123/Lambda-Function-with-Pulumi-python/blob/main/image/l-w-2.png)
 
+## Resource Map Verification
 
+After the Pulumi infrastructure setup, you can verify the resources in the AWS Management Console to ensure everything is created correctly.
+
+![Resource Map](./image/o-4.png)
 
 ## Testing Lambda Function with JSON Query
 
@@ -794,7 +722,183 @@ jobs:
    - Check the execution results, which will appear on the Lambda console.
    - Review the logs and output to verify that the Lambda function executed correctly.
 
-This process allows you to test your Lambda function directly within the AWS Lambda console using a JSON query.
-## Summary
+   ![](./image/o-5.png)
 
-This documentation provides a detailed guide on setting up an automated workflow to deploy a Node.js Lambda function using Pulumi and GitHub Actions. By organizing infrastructure code in Pulumi and leveraging GitHub Actions for CI/CD, we ensure a smooth and repeatable deployment process.
+This process allows you to test your Lambda function directly within the AWS Lambda console using a JSON query.
+
+## EC2 Instance Setup for Grafana, Tempo, and OpenTelemetry Collector
+
+### Step 1: Install Docker
+1. Update packages and install Docker:
+    ```sh
+    sudo apt-get update -y
+    sudo apt-get install -y docker.io
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    sudo usermod -aG docker ubuntu
+    ```
+
+### Step 2: Install Docker Compose
+1. Install Docker Compose:
+    ```sh
+    sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+    ```
+
+### Step 3: Set Up Directory Structure
+1. Create a directory for your setup:
+    ```sh
+    mkdir ~/grafana-tempo-otel
+    cd ~/grafana-tempo-otel
+    ```
+
+### Step 4: Create Configuration Files
+
+#### `tempo.yaml`
+Create `tempo.yaml` with the following content:
+```yaml
+auth_enabled: false
+
+server:
+  http_listen_port: 3200
+
+ingester:
+  trace_idle_period: 30s
+  max_block_bytes: 5000000
+  max_block_duration: 5m
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/traces
+
+compactor:
+  compaction:
+    block_retention: 48h
+
+querier:
+  frontend_worker:
+    frontend_address: 127.0.0.1:9095
+```
+
+#### `otel-collector-config.yaml`
+Create `otel-collector-config.yaml` with the following content:
+```yaml
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+
+processors:
+  batch:
+
+exporters:
+  otlp:
+    endpoint: "tempo:4317"
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+```
+
+#### `docker-compose.yml`
+Create `docker-compose.yml` with the following content:
+```yaml
+version: '3'
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  tempo:
+    image: grafana/tempo:latest
+    ports:
+      - "3200:3200"
+    command: ["tempo", "serve", "--config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"  # Expose the OTLP gRPC endpoint
+      - "4318:4318"  # Expose the OTLP HTTP endpoint
+```
+
+### Step 5: Start Services
+1. Navigate to the directory where you created the files and start the services using Docker Compose:
+    ```sh
+    cd ~/grafana-tempo-otel
+    sudo docker-compose up -d
+    ```
+
+## Example Scenario: Trace Data Flow
+
+1. **Application (Lambda Function)**:
+    - Your application generates trace data and sends it to the OpenTelemetry Collector endpoint (`http://${ec2InstancePrivateIP}:4317`).
+
+2. **OpenTelemetry Collector**:
+    - The Collector receives the traces via the OTLP receiver.
+    - The traces pass through the processing pipeline.
+    - The `logging` exporter logs the trace data for debugging.
+    - The `otlp` exporter sends the trace data to Tempo.
+
+3. **Grafana Tempo**:
+    - Tempo receives the trace data on its gRPC endpoint (`tempo:4317`).
+    - Tempo processes and stores the traces in `/tmp/tempo/traces`.
+
+4. **Grafana**:
+    - Grafana queries Tempo to retrieve the stored trace data.
+    - The traces are visualized in Grafana’s user interface, allowing you to analyze them.
+
+## Grafana Setup for Traces with Tempo
+
+### Step 1: Access Grafana
+1. Open a web browser and navigate to `http://<ec2_instance_public_ip>:3000`.
+2. Log in with the default credentials:
+    - **Username**: admin
+    - **Password**: admin
+
+### Step 2: Add Tempo Data Source
+1. In the Grafana UI, go to **Configuration** (gear icon) > **Data Sources**.
+2. Click on **Add data source**.
+3. Select **Tempo** from the list of available data sources.
+
+### Step 3: Configure Tempo Data Source
+1. Set the **HTTP URL** to `http://tempo:3200`.
+2. Click **Save & Test** to ensure the connection to Tempo is successful.
+
+### Step 4: Create a Dashboard
+1. Go to **Create** (plus icon) > **Dashboard**.
+2. Click on **Add new panel**.
+
+### Step 5: Query Traces
+1. In the query editor, select the Tempo data source.
+2. Use TraceQL to query the traces. For example:
+    ```traceql
+    {}
+    ```
+    ![TraceQL](./image/o-1.png)
+## Step 6: Managing and Understanding Trace Data
+![](./image/o-2.png)
+#### Explanation of Image Observations
+1. **Disconnected Dots in Grafana Dashboard**: The dots represent trace data points. Disconnected dots indicate that traces are not being generated continuously.
+2. **Lambda Function Invocation**: Each dot corresponds to a single invocation of the Lambda function. The intervals between dots show the time gap between successive invocations.
+3. **Continuous Trace Generation**: To achieve a more continuous line, you can increase the frequency of Lambda function invocations.
+4. **Query Adjustments**: In your Grafana dashboard, adjust the time intervals for querying and displaying data to better capture the trace events.
+
+By following these steps, you can set up an EC2 instance to host Grafana, Tempo, and the OpenTelemetry Collector, enabling you to visualize and analyze trace data generated by your application. This setup ensures a robust and efficient workflow for deploying serverless applications and monitoring their performance.
