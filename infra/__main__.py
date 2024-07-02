@@ -109,7 +109,7 @@ bucket = aws.s3.Bucket(bucket_name)
 
 pulumi.export("bucket_name", bucket.id)
 pulumi.export("bucket_arn", bucket.arn)
-# Export outputs
+# Export outputs fasfas
 pulumi.export("vpc_id", vpc.id)
 pulumi.export("igw_id", igw.id)
 pulumi.export("public_subnet_id", public_subnet.id)

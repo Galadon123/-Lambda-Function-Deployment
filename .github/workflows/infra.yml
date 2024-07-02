@@ -44,15 +44,21 @@ jobs:
       - name: Pulumi up
         run: pulumi up --yes --cwd infra
 
+      - name: Get Pulumi outputs
+        run: pulumi stack output --json --cwd infra > outputs.json
+
+      - name: Extract bucket name from Pulumi outputs
+        id: get_bucket_name
+        run: echo "::set-output name=bucket_name::$(jq -r .bucket_name outputs.json)"
+
       - name: Export Pulumi outputs to S3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
-          S3_BUCKET_NAME: lambda-function-bucket-poridhi
+          S3_BUCKET_NAME: ${{ steps.get_bucket_name.outputs.bucket_name }}
           S3_FILE_NAME: pulumi-outputs.json
         run: |
-          pulumi stack output --json --cwd infra > outputs.json
           aws s3 cp outputs.json s3://$S3_BUCKET_NAME/$S3_FILE_NAME
 
       - name: Clean up outputs.json
