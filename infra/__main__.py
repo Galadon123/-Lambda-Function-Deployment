@@ -5,6 +5,7 @@ from SecurityGroups import SecurityGroups
 from EC2 import EC2Instance
 from ECR import ECRRepository
 from IAM import IAMRole
+from S3Bucket import S3Bucket
 
 # Initialize resources
 vpc = VPC("my-vpc")
@@ -12,6 +13,7 @@ sg = SecurityGroups("my-vpc", vpc.vpc.id)
 ec2 = EC2Instance("grafana-tempo-otel", vpc.public_subnet.id, [sg.grafana_security_group.id])
 ecr = ECRRepository("my-lambda-function")
 iam = IAMRole("lambda")
+s3_bucket = S3Bucket("lambda-function-bucket-poridhi")
 
 # Export outputs
 pulumi.export("vpc_id", vpc.vpc.id)
