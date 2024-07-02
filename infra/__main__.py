@@ -98,8 +98,17 @@ lambda_role_policy_attachment_ec2 = aws.iam.RolePolicyAttachment("lambdaRolePoli
                                                                  policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole")
 
 # Create S3 Bucket
-bucket = aws.s3.Bucket("lambda-function-bucket-poridhi")
+import pulumi
+import pulumi_aws as aws
 
+# Explicitly specify the bucket name
+bucket_name = "lambda-function-bucket-poridhi"
+
+# Create S3 Bucket
+bucket = aws.s3.Bucket(bucket_name)
+
+pulumi.export("bucket_name", bucket.id)
+pulumi.export("bucket_arn", bucket.arn)
 # Export outputs
 pulumi.export("vpc_id", vpc.id)
 pulumi.export("igw_id", igw.id)
@@ -107,7 +116,6 @@ pulumi.export("public_subnet_id", public_subnet.id)
 pulumi.export("ec2_instance_id", ec2_instance.id)
 pulumi.export("ec2_instance_public_ip", ec2_instance.public_ip)
 pulumi.export("ec2_instance_private_ip", ec2_instance.private_ip)
-pulumi.export("bucket_name", bucket.id)
-pulumi.export("bucket_arn", bucket.arn)
+
 pulumi.export("lambda_role_arn", lambda_role.arn)
 pulumi.export("grafana_security_group_id", grafana_security_group.id)
