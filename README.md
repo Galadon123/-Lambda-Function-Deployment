@@ -2,12 +2,12 @@
 
 This project demonstrates the automated deployment of a Lambda function using Pulumi and GitHub Actions, combined with an observability stack. By integrating Pulumi for infrastructure as code and GitHub Actions for continuous deployment, it ensures a smooth, repeatable process for provisioning AWS resources and deploying serverless applications. The automation setup enhances the efficiency and reliability of managing cloud infrastructure, streamlining the deployment process while maintaining high standards of observability and traceability.
 
-![](./image/Screenshot%202024-07-02%20172748.png)
+![](https://github.com/Galadon123/-Lambda-Function-Deployment/blob/main/image/Screenshot%202024-07-02%20172748.png)
 
 ### Grafana and Tracing
 The observability stack, featuring Grafana, Tempo, and the OpenTelemetry Collector, is deployed on an EC2 instance. Grafana provides powerful visualization capabilities, allowing you to monitor various metrics and performance indicators. Tempo, integrated with Grafana, enables distributed tracing, helping you track the flow of requests through your system and identify performance bottlenecks. The OpenTelemetry Collector collects and exports trace data, ensuring comprehensive monitoring and insights into application behavior and performance.
 
-![](./image/Screenshot%202024-07-02%20174136.png)
+![](https://github.com/Galadon123/-Lambda-Function-Deployment/blob/main/image/Screenshot%202024-07-02%20174136.png)
 ## Project Directory
 
 ```
@@ -690,7 +690,7 @@ jobs:
 
 After the Pulumi infrastructure setup, you can verify the resources in the AWS Management Console to ensure everything is created correctly.
 
-![Resource Map](./image/o-4.png)
+![Resource Map](https://github.com/Galadon123/-Lambda-Function-Deployment/blob/main/image/o-4.png)
 
 ## Testing Lambda Function with JSON Query
 
@@ -726,7 +726,7 @@ After the Pulumi infrastructure setup, you can verify the resources in the AWS M
    - Check the execution results, which will appear on the Lambda console.
    - Review the logs and output to verify that the Lambda function executed correctly.
 
-   ![](./image/o-5.png)
+   ![](https://github.com/Galadon123/-Lambda-Function-Deployment/blob/main/image/o-5.png)
 
 This process allows you to test your Lambda function directly within the AWS Lambda console using a JSON query.
 
@@ -896,9 +896,9 @@ services:
     ```traceql
     {}
     ```
-    ![TraceQL](./image/o-1.png)
+    ![TraceQL](https://github.com/Galadon123/-Lambda-Function-Deployment/blob/main/image/o-1.png)
 ## Step 6: Managing and Understanding Trace Data
-![](./image/o-2.png)
+![](https://github.com/Galadon123/-Lambda-Function-Deployment/blob/main/image/o-2.png)
 #### Explanation of Image Observations
 1. **Disconnected Dots in Grafana Dashboard**: The dots represent trace data points. Disconnected dots indicate that traces are not being generated continuously.
 2. **Lambda Function Invocation**: Each dot corresponds to a single invocation of the Lambda function. The intervals between dots show the time gap between successive invocations.
