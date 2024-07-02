@@ -39,7 +39,7 @@ async function initializeOpenTelemetry() {
   }
 }
 
-// Initialize OpenTelemetry outside the handler to ensure it runs on cold start
+// Initialize OpenTelemetry outside the handler to ensure it runs on cold starts
 initializeOpenTelemetry();
 
 app.get('/', (req, res) => {

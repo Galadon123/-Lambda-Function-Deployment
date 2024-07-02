@@ -28,7 +28,7 @@ jobs:
 
       - name: Download Pulumi outputs from S3
         run: |
-          aws s3 cp s3://lambda-function-bucket-poridhi/pulumi-outputs.json ./outputs.json
+          aws s3 cp s3://${{ needs.Pulumi_Infra_Setup.outputs.bucket_name }}/pulumi-outputs.json ./outputs.json
 
       - name: Parse Pulumi outputs
         id: parse_outputs
