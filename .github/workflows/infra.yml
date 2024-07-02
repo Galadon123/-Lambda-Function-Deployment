@@ -39,7 +39,7 @@ jobs:
         run: pulumi login
 
       - name: Pulumi stack select
-        run: pulumi stack select dev435 --cwd infra
+        run: pulumi stack select dev190 --cwd infra
 
       - name: Pulumi up
         run: pulumi up --yes --cwd infra
