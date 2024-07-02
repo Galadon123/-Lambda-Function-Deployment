@@ -36,3 +36,9 @@ class VPC:
         self.public_route_table_association = aws.ec2.RouteTableAssociation(f"{name}-public-subnet-association",
                                                                            subnet_id=self.public_subnet.id,
                                                                            route_table_id=self.public_route_table.id)
+
+        pulumi.export("vpc_id", self.vpc.id)
+        pulumi.export("igw_id", self.igw.id)
+        pulumi.export("public_subnet_id", self.public_subnet.id)
+        pulumi.export("private_subnet_id", self.private_subnet.id)
+        pulumi.export("public_route_table_id", self.public_route_table.id)

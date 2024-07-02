@@ -36,3 +36,6 @@ class SecurityGroups:
                                                                "cidr_blocks": ["0.0.0.0/0"],
                                                            }],
                                                            tags={"Name": f"{name}-lambda-sg"})
+
+        pulumi.export("grafana_security_group_id", self.grafana_security_group.id)
+        pulumi.export("lambda_security_group_id", self.lambda_security_group.id)

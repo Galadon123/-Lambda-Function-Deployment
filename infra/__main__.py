@@ -1,5 +1,6 @@
 import pulumi
 
+# Import classes from their respective modules
 from VPC import VPC
 from SecurityGroups import SecurityGroups
 from EC2 import EC2Instance
