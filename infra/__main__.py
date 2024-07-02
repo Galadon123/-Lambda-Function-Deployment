@@ -1,6 +1,6 @@
 import pulumi
 import pulumi_aws as aws
-
+import json
 # Create VPC
 vpc = aws.ec2.Vpc("my-vpc",
                   cidr_block="10.0.0.0/16",
@@ -79,8 +79,8 @@ private_subnet = aws.ec2.Subnet("private-subnet",
 private_route_table = aws.ec2.RouteTable("my-vpc-private-rt",
                                          vpc_id=vpc.id,
                                          routes=[{
-                                             "cidr_block": "0.0.0.0/0",
-                                             "gateway_id": igw.id,
+                                             "cidr_block": "10.0.0.0/16",
+                                             "gateway_id": "local",
                                          }],
                                          opts=pulumi.ResourceOptions(depends_on=[igw]),
                                          tags={"Name": "my-vpc-private-rt"})
@@ -133,19 +133,23 @@ bucket = aws.s3.Bucket(bucket_name)
 # Get the ARN of the bucket
 bucket_arn = bucket.arn
 
-lambda_s3_policy = aws.iam.Policy("lambdaS3Policy",
-                                  policy=f"""{{
-                                      "Version": "2012-10-17",
-                                      "Statement": [
-                                          {{
-                                              "Effect": "Allow",
-                                              "Action": "s3:GetObject",
-                                              "Resource": [
-                                                  "{bucket_arn}/pulumi-outputs.json"
-                                              ]
-                                          }}
-                                      ]
-                                  }}""")
+lambda_s3_policy_document = {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowLambdaReadS3",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                f"arn:aws:s3:::{bucket_arn}/pulumi-outputs.json"
+            ]
+        }
+    ]
+}
+
+lambda_s3_policy = aws.iam.Policy("lambdaS3Policy", policy=json.dumps(lambda_s3_policy_document))
 
 # Attach the policy to the IAM Role
 lambda_role_policy_attachment = aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachment",
