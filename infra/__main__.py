@@ -158,7 +158,7 @@ lambda_s3_policy_document = {
 
 lambda_s3_policy = aws.iam.Policy("lambdaS3Policy", policy=json.dumps(lambda_s3_policy_document))
 
-# Attach the policy to the IAM Role
+# Attach the policy to tb he IAM Role
 lambda_role_policy_attachment = aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachment",
                                                              role=lambda_role.name,
                                                              policy_arn=lambda_s3_policy.arn)
