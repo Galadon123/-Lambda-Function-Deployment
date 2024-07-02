@@ -1,11 +1,13 @@
 # Automating Lambda Function Deployment with Pulumi, GitHub Actions, and Grafana Tempo for Tracing
 
-This project demonstrates the automation of deploying a Lambda function using Pulumi and GitHub Actions, along with setting up an observability stack comprising Grafana, Tempo, and the OpenTelemetry Collector on an EC2 instance. By leveraging infrastructure as code with Pulumi and continuous deployment pipelines with GitHub Actions, we ensure a seamless and repeatable process for provisioning AWS resources and deploying serverless applications. 
-![](./image/diagram-export-7-2-2024-5_32_58-PM.png)
+This project demonstrates the automated deployment of a Lambda function using Pulumi and GitHub Actions, combined with an observability stack. By integrating Pulumi for infrastructure as code and GitHub Actions for continuous deployment, it ensures a smooth, repeatable process for provisioning AWS resources and deploying serverless applications. The automation setup enhances the efficiency and reliability of managing cloud infrastructure, streamlining the deployment process while maintaining high standards of observability and traceability.
 
-The integration of Grafana and Tempo allows for comprehensive tracing and monitoring from lambda function, providing insights into the application's performance and behavior. This setup is designed to enhance the efficiency and reliability of cloud infrastructure management and application deployment.
+![](./image/Screenshot%202024-07-02%20172748.png)
 
-![](./image/diagram-export-7-2-2024-5_32_30-PM.png)
+### Grafana and Tracing
+The observability stack, featuring Grafana, Tempo, and the OpenTelemetry Collector, is deployed on an EC2 instance. Grafana provides powerful visualization capabilities, allowing you to monitor various metrics and performance indicators. Tempo, integrated with Grafana, enables distributed tracing, helping you track the flow of requests through your system and identify performance bottlenecks. The OpenTelemetry Collector collects and exports trace data, ensuring comprehensive monitoring and insights into application behavior and performance.
+
+![](./image/Screenshot%202024-07-02%20174136.png)
 ## Project Directory
 
 ```
