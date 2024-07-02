@@ -92,7 +92,7 @@ lambda_role_policy_attachment = aws.iam.RolePolicyAttachment("lambdaRolePolicyAt
                                                              role=lambda_role.name,
                                                              policy_arn=s3_policy.arn)
 
-# Attach additional policies for EC2 network interface creation and management
+# Attach additional policies for EC2 network interface creation and management fasfa
 lambda_role_policy_attachment_ec2 = aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachmentEC2",
                                                                  role=lambda_role.name,
                                                                  policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole")
