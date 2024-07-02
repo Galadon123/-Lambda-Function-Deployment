@@ -1,4 +1,4 @@
-name: Pulumi Infra Setup
+name: Pulumi_Infra_Setup
 
 on:
   push:

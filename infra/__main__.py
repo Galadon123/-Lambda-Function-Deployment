@@ -70,7 +70,7 @@ ec2_instance = aws.ec2.Instance("my-ec2-instance",
                                 instance_type="t2.micro",
                                 vpc_security_group_ids=[ec2_security_group.id],
                                 subnet_id=public_subnet.id,
-                                ami="ami-04a81a99f5ec58529",  # Example AMI ID, replace with your desired AMI
+                                ami="ami-04a81a99f5ec58529",  # Example AMI ID, replace with your desired AMIs
                                 tags={"Name": "my-ec2-instance"},
                                 opts=pulumi.ResourceOptions(depends_on=[public_subnet, ec2_security_group]))
 # Create Private Subnet within VPC
