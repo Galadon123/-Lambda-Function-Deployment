@@ -488,24 +488,37 @@ jobs:
         run: pulumi login
 
       - name: Pulumi stack select
-        run: pulumi stack select dev19 --cwd infra
+        run: pulumi stack select dev-p --cwd infra
+
+      - name: Pulumi refresh
+        run: pulumi refresh --yes --cwd infra
 
       - name: Pulumi up
         run: pulumi up --yes --cwd infra
+
+      - name: Get Pulumi outputs
+        run: pulumi stack output --json --cwd infra > outputs.json
+
+      - name: Extract bucket name from Pulumi outputs
+        id: get_bucket_name
+        run: echo "::set-output name=bucket_name::$(jq -r .bucket_name outputs.json)"
 
       - name: Export Pulumi outputs to S3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
-          S3_BUCKET_NAME: lambda-function-bucket-poridhi
+          S3_BUCKET_NAME: ${{ steps.get_bucket_name.outputs.bucket_name }}
           S3_FILE_NAME: pulumi-outputs.json
         run: |
-          pulumi stack output --json --cwd infra > outputs.json
           aws s3 cp outputs.json s3://$S3_BUCKET_NAME/$S3_FILE_NAME
 
       - name: Clean up outputs.json
         run: rm outputs.json
+
+      - name: Set output for S3 bucket name
+        id: set_s3_output
+        run: echo "bucket_name=${{ steps.get_bucket_name.outputs.bucket_name }}" >> $GITHUB_ENV
 ```
 
 ### `deploy-lambda.yml`
@@ -540,8 +553,10 @@ jobs:
           aws-region: us-east-1
 
       - name: Download Pulumi outputs from S3
+        env:
+          S3_BUCKET_NAME: ${{ github.event.workflow_run.outputs.bucket_name }}
         run: |
-          aws s3 cp s3://lambda-function-bucket-poridhi/pulumi-outputs.json ./outputs.json
+          aws s3 cp s3://$S3_BUCKET_NAME/pulumi-outputs.json ./outputs.json
 
       - name: Parse Pulumi outputs
         id: parse_outputs
@@ -551,7 +566,7 @@ jobs:
           LAMBDA_ROLE_ARN=$(jq -r '.lambda_role_arn' ./outputs.json)
           PRIVATE_SUBNET_ID=$(jq -r '.private_subnet_id' ./outputs.json)
           SECURITY_GROUP_ID=$(jq -r '.lambda_security_group_id' ./outputs.json)
-          GRAFANA_TEMPO_PRIVATE_IP=$(jq -r '.ec2_instance_private_ip' ./outputs.json)
+          GRAFANA_TEMPO_PRIVATE_IP=$(jq -r '.ec2_private_ip' ./outputs.json)
           echo "ECR_REPO_URL=$ECR_REPO_URL" >> $GITHUB_ENV
           echo "ECR_REGISTRY=$ECR_REGISTRY" >> $GITHUB_ENV
           echo "LAMBDA_ROLE_ARN=$LAMBDA_ROLE_ARN" >> $GITHUB_ENV
@@ -593,7 +608,7 @@ jobs:
           SECURITY_GROUP_ID: ${{ env.SECURITY_GROUP_ID }}
           GRAFANA_TEMPO_PRIVATE_IP: ${{ env.GRAFANA_TEMPO_PRIVATE_IP }}
         run: |
-          FUNCTION_NAME=my-node-app-lambda
+          FUNCTION_NAME=my-node-app-lambda-function
           IMAGE_URI=$ECR_REPO_URL:$IMAGE_TAG
           EXISTING_FUNCTION=$(aws lambda get-function --function-name $FUNCTION_NAME --region $AWS_REGION 2>&1 || true)
           if echo "$EXISTING_FUNCTION" | grep -q 'ResourceNotFoundException'; then
@@ -611,8 +626,6 @@ jobs:
               --function-name $FUNCTION_NAME \
               --image-uri $IMAGE_URI \
               --region $AWS_REGION
-
-
           fi
 ```
 
