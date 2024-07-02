@@ -28,7 +28,7 @@ jobs:
 
       - name: Download Pulumi outputs from S3
         env:
-          S3_BUCKET_NAME: ${{ github.event.workflow_run.jobs[0].steps[9].outputs.bucket_name }}
+          S3_BUCKET_NAME: ${{ github.event.workflow_run.outputs.bucket_name }}
         run: |
           aws s3 cp s3://$S3_BUCKET_NAME/pulumi-outputs.json ./outputs.json
 
