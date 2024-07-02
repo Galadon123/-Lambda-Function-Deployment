@@ -22,7 +22,7 @@ public_route_table = aws.ec2.RouteTable("my-vpc-public-rt",
                                         opts=pulumi.ResourceOptions(depends_on=[igw]),
                                         tags={"Name": "my-vpc-public-rt"})
 
-# Create Public Subnet within VPC
+# Create Public Subnet within VPC c
 public_subnet = aws.ec2.Subnet("public-subnet",
                                vpc_id=vpc.id,
                                cidr_block="10.0.1.0/24",

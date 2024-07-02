@@ -1,4 +1,4 @@
-name: Pulumi_Infra_Setup
+name: Pulumi Infra Setup
 
 on:
   push:
@@ -54,10 +54,6 @@ jobs:
         id: get_bucket_name
         run: echo "::set-output name=bucket_name::$(jq -r .bucket_name outputs.json)"
 
-      - name: Extract lambda function name from Pulumi outputs
-        id: get_lambda_function_name
-        run: echo "::set-output name=lambda_function_name::$(jq -r .lambda_function_name outputs.json)"
-
       - name: Export Pulumi outputs to S3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -70,3 +66,7 @@ jobs:
 
       - name: Clean up outputs.json
         run: rm outputs.json
+
+      - name: Set output for S3 bucket name
+        id: set_s3_output
+        run: echo "bucket_name=${{ steps.get_bucket_name.outputs.bucket_name }}" >> $GITHUB_ENV
