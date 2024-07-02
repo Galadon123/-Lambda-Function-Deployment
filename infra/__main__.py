@@ -130,19 +130,22 @@ lambda_role = aws.iam.Role("lambda-role",
 bucket_name = "lambda-function-bucket-poridhi"
 bucket = aws.s3.Bucket(bucket_name)
 
+# Get the ARN of the bucket
+bucket_arn = bucket.arn
+
 lambda_s3_policy = aws.iam.Policy("lambdaS3Policy",
-                                  policy="""{
+                                  policy=f"""{{
                                       "Version": "2012-10-17",
                                       "Statement": [
-                                          {
+                                          {{
                                               "Effect": "Allow",
                                               "Action": "s3:GetObject",
                                               "Resource": [
-                                                  "arn:aws:s3:::""" + bucket.arn + """/pulumi-outputs.json"
+                                                  "{bucket_arn}/pulumi-outputs.json"
                                               ]
-                                          }
+                                          }}
                                       ]
-                                  }""")
+                                  }}""")
 
 # Attach the policy to the IAM Role
 lambda_role_policy_attachment = aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachment",
