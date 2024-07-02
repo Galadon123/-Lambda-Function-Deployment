@@ -31,6 +31,12 @@ public_subnet = aws.ec2.Subnet("public-subnet",
                                opts=pulumi.ResourceOptions(depends_on=[vpc]),
                                tags={"Name": "public-subnet"})
 
+# Associate Route Table with Public Subnet
+public_route_table_association = aws.ec2.RouteTableAssociation("public-subnet-association",
+                                                               subnet_id=public_subnet.id,
+                                                               route_table_id=public_route_table.id,
+                                                               opts=pulumi.ResourceOptions(depends_on=[public_route_table]))
+
 # Create Security Group for Grafana Tempo instance
 grafana_security_group = aws.ec2.SecurityGroup("grafana-security-group",
                                                vpc_id=vpc.id,
@@ -92,30 +98,110 @@ lambda_role_policy_attachment = aws.iam.RolePolicyAttachment("lambdaRolePolicyAt
                                                              role=lambda_role.name,
                                                              policy_arn=s3_policy.arn)
 
-# Attach additional faspolicies for EC2 network interface creation and management fasfa
+# Attach additional policies for EC2 network interface creation and management
 lambda_role_policy_attachment_ec2 = aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachmentEC2",
                                                                  role=lambda_role.name,
                                                                  policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole")
 
 # Create S3 Bucket
-import pulumi
-import pulumi_aws as aws
-
-# Explicitly specify the bucket name
 bucket_name = "lambda-function-bucket-poridhi"
-
-# Create S3 Bucket
 bucket = aws.s3.Bucket(bucket_name)
 
-pulumi.export("bucket_name", bucket.id)
+# Create Private Subnet within VPC for Lambda function
+private_subnet = aws.ec2.Subnet("private-subnet",
+                                vpc_id=vpc.id,
+                                cidr_block="10.0.2.0/24",
+                                availability_zone="us-east-1a",
+                                map_public_ip_on_launch=False,  # Disable automatic public IP assignment
+                                opts=pulumi.ResourceOptions(depends_on=[vpc]),
+                                tags={"Name": "private-subnet"})
+
+# Create Route Table for Private Subnet
+private_route_table = aws.ec2.RouteTable("my-vpc-private-rt",
+                                         vpc_id=vpc.id,
+                                         routes=[{
+                                             "cidr_block": "0.0.0.0/0",
+                                             "gateway_id": igw.id,  # Modify as per your requirements for a NAT Gateway or another route
+                                         }],
+                                         opts=pulumi.ResourceOptions(depends_on=[igw]),
+                                         tags={"Name": "my-vpc-private-rt"})
+
+# Associate Route Table with Private Subnet
+private_route_table_association = aws.ec2.RouteTableAssociation("private-subnet-association",
+                                                                subnet_id=private_subnet.id,
+                                                                route_table_id=private_route_table.id,
+                                                                opts=pulumi.ResourceOptions(depends_on=[private_route_table]))
+
+# Create Security Group for Lambda function
+lambda_security_group = aws.ec2.SecurityGroup("lambda-security-group",
+                                              vpc_id=vpc.id,
+                                              description="Allow all traffic",
+                                              ingress=[{
+                                                  "protocol": "-1",  # All protocols
+                                                  "from_port": 0,
+                                                  "to_port": 0,
+                                                  "cidr_blocks": ["0.0.0.0/0"],
+                                              }],
+                                              egress=[{
+                                                  "protocol": "-1",  # All protocols
+                                                  "from_port": 0,
+                                                  "to_port": 0,
+                                                  "cidr_blocks": ["0.0.0.0/0"],
+                                              }],
+                                              opts=pulumi.ResourceOptions(depends_on=[vpc]),
+                                              tags={"Name": "lambda-security-group"})
+
+# Create IAM Role for GitHub Actions
+github_actions_role = aws.iam.Role("github-actions-role",
+                                   assume_role_policy="""{
+                                       "Version": "2012-10-17",
+                                       "Statement": [
+                                           {
+                                               "Effect": "Allow",
+                                               "Principal": {
+                                                   "Service": "ec2.amazonaws.com"
+                                               },
+                                               "Action": "sts:AssumeRole"
+                                           }
+                                       ]
+                                   }""")
+
+# Attach Policies to GitHub Actions Role
+github_actions_policy = aws.iam.Policy("github-actions-policy",
+                                       policy=f"""{
+                                           "Version": "2012-10-17",
+                                           "Statement": [
+                                               {
+                                                   "Effect": "Allow",
+                                                   "Action": [
+                                                       "s3:PutObject",
+                                                       "s3:GetObject",
+                                                       "s3:ListBucket"
+                                                   ],
+                                                   "Resource": [
+                                                       "{bucket.arn}",
+                                                       "{bucket.arn}/*"
+                                                   ]
+                                               }
+                                           ]
+                                       }""")
+
+github_actions_role_policy_attachment = aws.iam.RolePolicyAttachment("githubActionsRolePolicyAttachment",
+                                                                     role=github_actions_role.name,
+                                                                     policy_arn=github_actions_policy.arn)
+
+# Export outputs
+pulumi.export("bucket_name", bucket.bucket)
 pulumi.export("bucket_arn", bucket.arn)
-# Export outputs fasfas
 pulumi.export("vpc_id", vpc.id)
 pulumi.export("igw_id", igw.id)
 pulumi.export("public_subnet_id", public_subnet.id)
 pulumi.export("ec2_instance_id", ec2_instance.id)
 pulumi.export("ec2_instance_public_ip", ec2_instance.public_ip)
 pulumi.export("ec2_instance_private_ip", ec2_instance.private_ip)
-
 pulumi.export("lambda_role_arn", lambda_role.arn)
 pulumi.export("grafana_security_group_id", grafana_security_group.id)
+pulumi.export("private_subnet_id", private_subnet.id)
+pulumi.export("private_route_table_id", private_route_table.id)
+pulumi.export("lambda_security_group_id", lambda_security_group.id)
+pulumi.export("github_actions_role_arn", github_actions_role.arn)
