@@ -65,7 +65,7 @@ private_subnet = aws.ec2.Subnet("private-subnet",
                                 opts=pulumi.ResourceOptions(depends_on=[vpc]),
                                 tags={"Name": "private-subnet"})
 
-# Create Security Group for Lambda function
+# Create Security Group for Lambda function hfd
 lambda_security_group = aws.ec2.SecurityGroup("lambda-security-group",
                                               vpc_id=vpc.id,
                                               description="Allow all traffic",
