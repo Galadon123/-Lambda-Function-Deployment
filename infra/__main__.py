@@ -1,6 +1,5 @@
 import pulumi
 import pulumi_aws as aws
-import json
 
 # Create VPC
 vpc = aws.ec2.Vpc("my-vpc",
@@ -83,21 +82,21 @@ lambda_role = aws.iam.Role("lambda-role",
                            }""")
 
 # Attach Policies to Role
-s3_policy = aws.iam.Policy("s3Policy",
-                           policy="""{
-                               "Version": "2012-10-17",
-                               "Statement": [
-                                   {
-                                       "Effect": "Allow",
-                                       "Action": "s3:GetObject",
-                                       "Resource": "arn:aws:s3:::lambda-function-bucket-poridhi/pulumi-outputs.json"
-                                   }
-                               ]
-                           }""")
+lambda_s3_policy = aws.iam.Policy("lambdaS3Policy",
+                                  policy="""{
+                                      "Version": "2012-10-17",
+                                      "Statement": [
+                                          {
+                                              "Effect": "Allow",
+                                              "Action": "s3:GetObject",
+                                              "Resource": "arn:aws:s3:::lambda-function-bucket-poridhi/pulumi-outputs.json"
+                                          }
+                                      ]
+                                  }""")
 
 lambda_role_policy_attachment = aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachment",
                                                              role=lambda_role.name,
-                                                             policy_arn=s3_policy.arn)
+                                                             policy_arn=lambda_s3_policy.arn)
 
 # Attach additional policies for EC2 network interface creation and management
 lambda_role_policy_attachment_ec2 = aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachmentEC2",
@@ -154,49 +153,42 @@ lambda_security_group = aws.ec2.SecurityGroup("lambda-security-group",
 
 # Create IAM Role for GitHub Actions
 github_actions_role = aws.iam.Role("github-actions-role",
-                                   assume_role_policy=json.dumps({
+                                   assume_role_policy="""{
                                        "Version": "2012-10-17",
                                        "Statement": [
                                            {
                                                "Effect": "Allow",
                                                "Principal": {
-                                                   "Service": "actions.amazonaws.com"
+                                                   "Service": "ec2.amazonaws.com"
                                                },
                                                "Action": "sts:AssumeRole"
                                            }
                                        ]
-                                   }))
-
-# S3 policy with dynamic values
-bucket_arn = bucket.arn.apply(lambda arn: arn)
-bucket_arn_with_wildcard = bucket.arn.apply(lambda arn: f"{arn}/*")
-
-s3_policy_document = pulumi.Output.all(bucket_arn, bucket_arn_with_wildcard).apply(lambda args: json.dumps({
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:PutObject",
-                "s3:GetObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                args[0],
-                args[1]
-            ]
-        }
-    ]
-}))
-
-s3_policy = aws.iam.Policy("s3Policy",
-    policy=s3_policy_document
-)
+                                   }""")
 
 # Attach Policies to GitHub Actions Role
+github_actions_policy = aws.iam.Policy("github-actions-policy",
+                                       policy=f"""{
+                                           "Version": "2012-10-17",
+                                           "Statement": [
+                                               {
+                                                   "Effect": "Allow",
+                                                   "Action": [
+                                                       "s3:PutObject",
+                                                       "s3:GetObject",
+                                                       "s3:ListBucket"
+                                                   ],
+                                                   "Resource": [
+                                                       "{bucket.arn}",
+                                                       "{bucket.arn}/*"
+                                                   ]
+                                               }
+                                           ]
+                                       }""")
+
 github_actions_role_policy_attachment = aws.iam.RolePolicyAttachment("githubActionsRolePolicyAttachment",
                                                                      role=github_actions_role.name,
-                                                                     policy_arn=s3_policy.arn)
+                                                                     policy_arn=github_actions_policy.arn)
 
 # Export outputs
 pulumi.export("bucket_name", bucket.bucket)
